@@ -147,6 +147,47 @@ api.delete('/admin/delete_address/:id', async (c) => {
     })
 })
 
+api.post('/admin/batch_create_addresses', async (c) => {
+    const msgs = i18n.getMessagesbyContext(c);
+    const { count, prefix, domain, enablePrefix, enableRandomSubdomain } = await c.req.json();
+
+    if (!count || count < 1 || count > 100) {
+        return c.text('Count must be between 1 and 100', 400)
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < count; i++) {
+        const randomSuffix = Math.random().toString(36).substring(2, 10);
+        const name = prefix ? `${prefix}${randomSuffix}` : randomSuffix;
+
+        try {
+            const res = await newAddress(c, {
+                name,
+                domain,
+                enablePrefix,
+                enableRandomSubdomain: getBooleanValue(enableRandomSubdomain),
+                checkLengthByConfig: false,
+                addressPrefix: null,
+                checkAllowDomains: false,
+                enableCheckNameRegex: false,
+                sourceMeta: 'admin_batch'
+            });
+            results.push(res);
+        } catch (e) {
+            errors.push({ name, error: (e as Error).message });
+        }
+    }
+
+    return c.json({
+        success: results.length,
+        failed: errors.length,
+        results,
+        errors
+    });
+})
+
 api.delete('/admin/clear_inbox/:id', async (c) => {
     const msgs = i18n.getMessagesbyContext(c);
     const { id } = c.req.param();

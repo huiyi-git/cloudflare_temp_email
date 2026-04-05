@@ -33,6 +33,15 @@ jobs:
           cd worker
           wrangler deploy
 
+      - name: Deploy API Proxy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          cd api-proxy
+          npm install
+          wrangler deploy
+
       - name: Build Frontend
         run: |
           cd frontend
